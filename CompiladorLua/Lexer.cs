@@ -6,95 +6,145 @@ using System.Threading.Tasks;
 
 namespace CompiladorLua
 {
-    internal class Lexer
+    public enum TokenType
     {
-        private string source;
-        private int currentPosition;
 
-        public Lexer(string source)
+        Keyword,
+        Identifier,
+        Operator,
+        ParenthesisOpen,
+        ParenthesisClose,
+        Number,
+        EndOfFile,
+        Plus,        
+        Minus,        
+        Multiply,     
+        Divide
+    }
+
+  
+    public class Lexer
+    {
+        private string input;
+        private int position;
+        private int readPosition;
+        private char currentChar;
+
+        public Lexer(string input)
         {
-            this.source = source;
-            currentPosition = 0;
+            this.input = input;
+            this.position = 0;
+            this.readPosition = 0;
+            this.currentChar = input.Length > 0 ? input[0] : '\0';
+        }
+
+        private void Advance()
+        {
+            position = readPosition;
+            readPosition++;
+
+            if (readPosition >= input.Length)
+            {
+                currentChar = '\0';  // End of input
+            }
+            else
+            {
+                currentChar = input[readPosition];
+            }
+        }
+
+        private bool IsLetter(char c)
+        {
+            return char.IsLetter(c) || c == '_';
+        }
+
+        private bool IsDigit(char c)
+        {
+            return char.IsDigit(c);
+        }
+
+        private bool IsOperator(char c)
+        {
+            return c == '+' || c == '-' || c == '*' || c == '/';
         }
 
         public List<Token> Tokenize()
         {
             var tokens = new List<Token>();
 
-            while (currentPosition < source.Length)
+            while (currentChar != '\0')
             {
-                char currentChar = source[currentPosition];
-
                 if (char.IsWhiteSpace(currentChar))
                 {
-                    currentPosition++;
+                    Advance();
                     continue;
                 }
-                else if (char.IsDigit(currentChar))
+
+                if (IsLetter(currentChar))
                 {
-                    tokens.Add(ReadNumber());
+                    string identifier = ReadIdentifier();
+                    tokens.Add(new Token(TokenType.Identifier, identifier));
+                    continue;
                 }
-                else if (char.IsLetter(currentChar))
+
+                if (IsDigit(currentChar))
                 {
-                    tokens.Add(ReadIdentifier());
+                    string literal = ReadLiteral();
+                    tokens.Add(new Token(TokenType.Number, literal));
+                    continue;
                 }
-                else if (currentChar == '+')
+
+                if (IsOperator(currentChar))
                 {
-                    tokens.Add(new Token { Type = "Plus", Value = "+" });
-                    currentPosition++;
+                    string operatorValue = currentChar.ToString();
+                    tokens.Add(new Token(TokenType.Operator, operatorValue));
+                    Advance();
+                    continue;
                 }
-                else if (currentChar == '-')
+
+                switch (currentChar)
                 {
-                    tokens.Add(new Token { Type = "Minus", Value = "-" });
-                    currentPosition++;
-                }
-                else if (currentChar == '*')
-                {
-                    tokens.Add(new Token { Type = "Multiply", Value = "*" });
-                    currentPosition++;
-                }
-                else if (currentChar == '/')
-                {
-                    tokens.Add(new Token { Type = "Divide", Value = "/" });
-                    currentPosition++;
-                }
-                else
-                {
-                    throw new Exception($"Unknown character: {currentChar}");
+                    case '(':
+                        tokens.Add(new Token(TokenType.ParenthesisOpen, "("));
+                        Advance();
+                        break;
+                    case ')':
+                        tokens.Add(new Token(TokenType.ParenthesisClose, ")"));
+                        Advance();
+                        break;
+                    default:
+                        throw new Exception($"Unknown character: {currentChar}");
                 }
             }
 
+            // Agregar el token de EOF
+            tokens.Add(new Token(TokenType.EndOfFile, ""));
             return tokens;
         }
 
-        private Token ReadNumber()
+        private string ReadIdentifier()
         {
-            int start = currentPosition;
-            while (currentPosition < source.Length && char.IsDigit(source[currentPosition]))
+            int startPos = position;
+            while (IsLetter(currentChar) || IsDigit(currentChar))
             {
-                currentPosition++;
+                Advance();
             }
-
-            return new Token
-            {
-                Type = "Number",
-                Value = source.Substring(start, currentPosition - start)
-            };
+            return input.Substring(startPos, position - startPos);
         }
 
-        private Token ReadIdentifier()
+        private string ReadLiteral()
         {
-            int start = currentPosition;
-            while (currentPosition < source.Length && char.IsLetterOrDigit(source[currentPosition]))
+            int startPos = position;
+            while (IsDigit(currentChar))
             {
-                currentPosition++;
+                Advance();
             }
-
-            return new Token
-            {
-                Type = "Identifier",
-                Value = source.Substring(start, currentPosition - start)
-            };
+            return input.Substring(startPos, position - startPos);
         }
     }
+
+
 }
+
+
+

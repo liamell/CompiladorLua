@@ -8,7 +8,20 @@ namespace CompiladorLua
 {
     public class Token
     {
-        public string Type { get; set; }
+        public TokenType Type { get; set; } // Cambia de TokenTypeValue a Type
         public string Value { get; set; }
+
+        public Token(TokenType type, string value)
+        {
+            Type = type;
+            Value = value;
+        }
     }
+
+
+
+
+
+
+
 }

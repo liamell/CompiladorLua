@@ -21,7 +21,7 @@ namespace CompiladorLua
         {
             var left = ParseTerm();
 
-            while (Match("Plus", "Minus"))
+            while (Match(TokenType.Plus, TokenType.Minus))
             {
                 string operatorSymbol = Previous().Value;
                 var right = ParseTerm();
@@ -40,7 +40,7 @@ namespace CompiladorLua
         {
             var left = ParseFactor();
 
-            while (Match("Multiply", "Divide"))
+            while (Match(TokenType.Multiply, TokenType.Divide))
             {
                 string operatorSymbol = Previous().Value;
                 var right = ParseFactor();
@@ -57,7 +57,7 @@ namespace CompiladorLua
 
         private AstNode ParseFactor()
         {
-            if (Match("Number"))
+            if (Match(TokenType.Number))
             {
                 return new NumberLiteral { Value = Previous().Value };
             }
@@ -65,7 +65,7 @@ namespace CompiladorLua
             throw new Exception("Unexpected token");
         }
 
-        private bool Match(params string[] types)
+        private bool Match(params TokenType[] types)
         {
             if (IsAtEnd()) return false;
 
@@ -81,7 +81,7 @@ namespace CompiladorLua
             return false;
         }
 
-        private bool Check(string type)
+        private bool Check(TokenType type)
         {
             if (IsAtEnd()) return false;
             return Peek().Type == type;
